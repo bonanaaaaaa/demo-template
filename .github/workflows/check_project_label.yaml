@@ -1,0 +1,42 @@
+name: Check project label
+
+on:
+  pull_request:
+    types:
+      - opened
+      - reopened
+      - synchronize
+      - edited
+      - labeled
+      - unlabeled
+
+jobs:
+  it-has-a-project-label:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check for project label
+        id: check_project_label
+        run: |
+          echo "Debugging: Contents of GITHUB_EVENT_PATH"
+          cat "$GITHUB_EVENT_PATH"
+
+          echo "Debugging: Extracting labels"
+          labels=$(jq -r '.pull_request.labels[].name' "$GITHUB_EVENT_PATH")
+          echo "Extracted labels: $labels"
+
+          echo "Debugging: Checking for project label"
+          if echo "$labels" | grep -q "^project/"; then
+            echo "project label found"
+            echo "has_project_label=true" >> $GITHUB_OUTPUT
+          else
+            echo "No project label found"
+            echo "has_project_label=false" >> $GITHUB_OUTPUT
+          fi
+
+          echo "Debugging: Final GITHUB_OUTPUT"
+          cat $GITHUB_OUTPUT
+      - name: Fail if PR does not have a project label
+        if: steps.check_project_label.outputs.has_project_label == 'false'
+        run: |
+          echo "This PR must have a project label."
+          exit 1
