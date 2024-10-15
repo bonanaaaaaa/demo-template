@@ -1,0 +1,21 @@
+name: Check do not merge
+
+on:
+  pull_request:
+    types:
+      - opened
+      - reopened
+      - synchronize
+      - edited
+      - labeled
+      - unlabeled
+
+jobs:
+  check-do-not-merge:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: echo "${{ toJson(github.event.pull_request.labels.*.name) }}"
+      - uses: bonanaaaaaa/demo-git/modules/ci/do-not-merge@main
+        with:
+          labels: ${{ toJson(github.event.pull_request.labels.*.name) }}
